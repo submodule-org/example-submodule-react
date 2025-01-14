@@ -1,4 +1,4 @@
-import { observables, operators, map, combine, scoper, applyPipes, provide } from "@submodule/core"
+import { observables, operators, map, combine, scoper, applyPipes, provide, type Subscribable } from "@submodule/core"
 
 export type Config = {
   seed: number
@@ -33,10 +33,9 @@ export const configStream = provide(() => {
   return [configStream, changeConfigAPI] as const
 })
 
-
 export const counterStream = map(
   combine({ scoper, configStream }),
-  ({ configStream: [observable] }) => {
+  ({ configStream: [observable] }): Subscribable<number> => {
     const [counterApp, counterAppSubscriber] = observables.pushObservable<number>()
 
     let interval: number | undefined = undefined
@@ -62,14 +61,16 @@ export const counterStream = map(
         }
       })
 
-    Object.defineProperty(counterApp, 'cleanup', {
-      value: () => {
-        cleanup()
-        clearInterval(interval)
+    return {
+      ...counterApp,
+      subscribe: (sub) => {
+        const unsub = counterApp.subscribe(sub)
+        return () => {
+          unsub()
+          cleanup()
+        }
       }
-    })
-
-    return counterApp
+    }
   })
 
 export const onlyOddStream = applyPipes(
