@@ -3,7 +3,7 @@ import {
 	ScopeProvider,
 	useObservable,
 	useObservableValue,
-	usePushObservable,
+	useControllableObservable,
 	useResolve,
 } from "@submodule/core/react";
 import {
@@ -78,10 +78,9 @@ const CurrentConfig = () => {
 };
 
 const ChangeConfig = () => {
-	const [configObservable, controller] = useResolve(configStream);
-	const config = useObservableValue(configObservable);
+	const [config, controller] = useControllableObservable(configStream);
 
-	const [viewState, changeModal] = usePushObservable(modalStream);
+	const [viewState, changeModal] = useControllableObservable(modalStream);
 
 	if (!viewState.hasValue || !config.hasValue) {
 		return null;
@@ -133,13 +132,12 @@ function OffTree() {
 	}, []);
 	const onlyEven = useObservable(counterStream, filterOps);
 
-	if (onlyEven.hasValue) return <div>only even: {onlyEven.value}</div>;
+	if (onlyEven.hasValue) return <div>offtree only even: {onlyEven.value}</div>;
 }
 
 function Counter() {
-	const [configObservable, configController] = useResolve(configStream);
-
-	const counterValue = useObservableValue(configObservable);
+	const [counterValue, configController] =
+		useControllableObservable(configStream);
 	const counterApp = useObservable(counterStream);
 
 	const onlyOdd = useObservable(onlyOddStream);

@@ -34,10 +34,9 @@ export const configStream = provide(() => {
 })
 
 
-
 export const counterStream = map(
   combine({ scoper, configStream }),
-  ({ scoper, configStream: [observable] }) => {
+  ({ configStream: [observable] }) => {
     const [counterApp, counterAppSubscriber] = observables.pushObservable<number>()
 
     let interval: number | undefined = undefined
@@ -46,7 +45,8 @@ export const counterStream = map(
       .subscribe({
         next: ({ seed, increment, frequency }) => {
           if (interval) {
-            clearTimeout(interval)
+            console.log('clearing interval')
+            clearInterval(interval)
           }
 
           interval = setInterval(() => {
@@ -62,9 +62,11 @@ export const counterStream = map(
         }
       })
 
-    scoper.addDefer(() => {
-      clearTimeout(interval)
-      cleanup()
+    Object.defineProperty(counterApp, 'cleanup', {
+      value: () => {
+        cleanup()
+        clearInterval(interval)
+      }
     })
 
     return counterApp
